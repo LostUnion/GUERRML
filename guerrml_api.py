@@ -135,14 +135,13 @@ class GUERRML(CONFIG):
     def check_email(self, seq: int = 0):
         """Checking for new emails."""
         try:
-            # time.sleep(3)
             res = self.__request(method='GET', func=self.check_email.__name__, seq=seq).get('list')[0]
             mail_from = res.get('mail_from')
-            # if mail_from in ['no-reply@guerrillamail.com']:
-                # mail_id = res.get('mail_id')
-                # success = self.del_email([mail_id])
-                # log.info('Service message deleted!')
-                # return success if success else False
+            if mail_from in ['no-reply@guerrillamail.com']:
+                mail_id = res.get('mail_id')
+                success = self.del_email([mail_id])
+                log.info('Service message deleted!')
+                return success if success else False
 
             return res if res else False
         except Exception as err:
