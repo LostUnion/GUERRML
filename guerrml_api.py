@@ -1,4 +1,5 @@
 import re
+import time
 import random
 from abc import ABC
 from typing import *
@@ -31,7 +32,7 @@ class GUERRML(CONFIG):
                 'ip': self.ip,
                 'lang': self.lang,
                 'agent': self.agent,
-                **kwargs
+                **kwargs,
             }
 
             if self.phpsessid:
@@ -127,11 +128,42 @@ class GUERRML(CONFIG):
             return res if res else False
         except Exception as err:
             log.error(
-                f"An error occurred in the block GUERRML.get_email_address: {err}"
+                f"An error occurred in the block GUERRML.set_email_user: {err}"
+            )
+            return False
+        
+    def check_email(self, seq: int = 0):
+        """Checking for new emails."""
+        try:
+            # time.sleep(3)
+            res = self.__request(method='GET', func=self.check_email.__name__, seq=seq).get('list')[0]
+            mail_from = res.get('mail_from')
+            if mail_from in ['no-reply@guerrillamail.com']:
+                mail_id = res.get('mail_id')
+                success = self.del_email([mail_id])
+                log.info('Service message deleted!')
+                return success if success else False
+
+            return res if res else False
+        except Exception as err:
+            log.error(
+                f"An error occurred in the block GUERRML.check_email: {err}"
+            )
+            return False
+        
+    def del_email(self, email_ids: list) -> bool:
+        """Deleting an email from the mail."""
+        try:
+            res = self.__request(method='GET', func=self.del_email.__name__, **{"email_ids[]": email_ids}).get('auth').get('success')
+            return res if res else False
+        except Exception as err:
+            log.error(
+                f"An error occurred in the block GUERRML.del_email: {err}"
             )
             return False
 
 
 service = GUERRML()
 default_email = service.get_email_address()
-print(service.set_email_user())
+email = service.set_email_user()
+service.check_email()
