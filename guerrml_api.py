@@ -138,11 +138,11 @@ class GUERRML(CONFIG):
             # time.sleep(3)
             res = self.__request(method='GET', func=self.check_email.__name__, seq=seq).get('list')[0]
             mail_from = res.get('mail_from')
-            if mail_from in ['no-reply@guerrillamail.com']:
-                mail_id = res.get('mail_id')
-                success = self.del_email([mail_id])
-                log.info('Service message deleted!')
-                return success if success else False
+            # if mail_from in ['no-reply@guerrillamail.com']:
+                # mail_id = res.get('mail_id')
+                # success = self.del_email([mail_id])
+                # log.info('Service message deleted!')
+                # return success if success else False
 
             return res if res else False
         except Exception as err:
@@ -151,7 +151,7 @@ class GUERRML(CONFIG):
             )
             return False
         
-    def del_email(self, email_ids: list) -> bool:
+    def del_email(self, email_ids: list):
         """Deleting an email from the mail."""
         try:
             res = self.__request(method='GET', func=self.del_email.__name__, **{"email_ids[]": email_ids}).get('auth').get('success')
@@ -161,9 +161,15 @@ class GUERRML(CONFIG):
                 f"An error occurred in the block GUERRML.del_email: {err}"
             )
             return False
+        
+    def fetch_email(self, email_id: int):
+        """Viewing the contents of an email."""
+        try:
+            res = self.__request(method='GET', func=self.fetch_email.__name__, email_id=email_id)
+            return res if res else False
+        except Exception as err:
+            log.error(
+                f"An error occurred in the block GUERRML.fetch_email: {err}"
+            )
+            return False
 
-
-service = GUERRML()
-default_email = service.get_email_address()
-email = service.set_email_user()
-service.check_email()
