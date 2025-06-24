@@ -1,8 +1,11 @@
+import re
+import random
 from abc import ABC
 from typing import *
 
 from curl_cffi import requests
 
+from usergen import USERGEN
 from logger_settings import logger as log
 
 class CONFIG(ABC):
@@ -21,7 +24,7 @@ class GUERRML(CONFIG):
     def __init__(self):
         super().__init__()
 
-    def request_(self, method: str, func: str, **kwargs):
+    def __request(self, method: str, func: str, **kwargs):
         try:
             params = {
                 'f': func,
@@ -56,7 +59,71 @@ class GUERRML(CONFIG):
     def get_email_address(self):
         """Returns random mail with a domain guerrillamailblock.com."""
         try:
-            res = self.request_(method='GET', func=self.get_email_address.__name__).get('email_addr')
+            res = self.__request(method='GET', func=self.get_email_address.__name__).get('email_addr')
+            return res if res else False
+        except Exception as err:
+            log.error(
+                f"An error occurred in the block GUERRML.get_email_address: {err}"
+            )
+            return False
+        
+    def __email_gen(self, username):
+        try:
+            def variant_1(username):
+                return re.sub(r'(?<!^)(?=[A-Z])', '_', username)
+            
+            def variant_2(username):
+                return re.sub(r'(?<=\D)(?=\d)', '_', username)
+            
+            def variant_3(username):
+                user_email = re.sub(r'(?<!^)(?=[A-Z])', '_', username)
+                user_email = re.sub(r'(?<=\D)(?=\d)', '_', user_email)
+                return user_email
+            
+            def variant_4(username):
+                return re.sub(r'(?<!^)(?=[A-Z])', '.', username)
+            
+            def variant_5(username):
+                return re.sub(r'(?<=\D)(?=\d)', '.', username)
+            
+            def variant_6(username):
+                user_email = re.sub(r'(?<!^)(?=[A-Z])', '.', username)
+                user_email = re.sub(r'(?<=\D)(?=\d)', '.', user_email)
+                return user_email
+            
+            def variant_7(username):
+                user_email = re.sub(r'(?<!^)(?=[A-Z])', '_', username)
+                user_email = re.sub(r'(?<=\D)(?=\d)', '.', user_email)
+                return user_email
+            
+            def variant_8(username):
+                user_email = re.sub(r'(?<!^)(?=[A-Z])', '_', username)
+                user_email = re.sub(r'(?<=\D)(?=\d)', '.', user_email)
+                return user_email
+
+            user_email = random.choice([
+                variant_1(username), variant_2(username),
+                variant_3(username), variant_4(username),
+                variant_5(username), variant_6(username),
+                variant_7(username), variant_8(username)
+            ])
+            
+            return user_email.lower()
+
+        except Exception as err:
+            log.error(
+                    "Ошибка в блоке Reger."
+                    f"email_gen: {err}"
+                )
+
+            return False
+        
+    def set_email_user(self):
+        """Replacing the default username in the email address."""
+        try:
+            username = USERGEN().get_username()
+            new_email = self.__email_gen(username)
+            res = self.__request(method='GET', func=self.set_email_user.__name__, email_user=new_email).get('email_addr')
             return res if res else False
         except Exception as err:
             log.error(
@@ -65,5 +132,6 @@ class GUERRML(CONFIG):
             return False
 
 
-service = GUERRML()      
-print(service.get_email_address())
+service = GUERRML()
+default_email = service.get_email_address()
+print(service.set_email_user())
